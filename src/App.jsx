@@ -16,84 +16,7 @@ import CartDrawer from './components/CartDrawer';
 import LoginModal from './components/LoginModal';
 import AdminDashboard from './sections/AdminDashboard';
 
-const initialOrders = [
-  {
-    id: 'UB-192834',
-    items: [
-      { name: 'Urban Gourmet Burger', quantity: 1, price: '₹590' },
-      { name: 'Artisan Cafe Latte', quantity: 2, price: '₹240' }
-    ],
-    type: 'delivery',
-    address: '742 Evergreen Terrace, Seattle, WA',
-    landmark: 'Near Springfield Park',
-    total: 1120, // 590 + 240*2 + 50
-    status: 'Preparing'
-  },
-  {
-    id: 'UB-839210',
-    items: [
-      { name: 'Strawberry Glazed Cheesecake', quantity: 1, price: '₹350' },
-      { name: 'Velvet Mocha', quantity: 1, price: '₹280' }
-    ],
-    type: 'pickup',
-    address: '',
-    landmark: '',
-    total: 630,
-    status: 'Pending'
-  }
-];
 
-const initialReservations = [
-  {
-    name: 'Elena Rostova',
-    email: 'elena@connoisseur.com',
-    phone: '+1 (206) 555-8932',
-    guests: '2',
-    date: '2026-06-15',
-    time: '18:30',
-    seating: 'booths'
-  },
-  {
-    name: 'Liam Henderson',
-    email: 'liam@techcorp.io',
-    phone: '+1 (206) 555-1029',
-    guests: '4',
-    date: '2026-06-14',
-    time: '12:30',
-    seating: 'patio'
-  }
-];
-
-const initialVacancyMap = {
-  booths: [
-    { id: 'B1', occupied: true },
-    { id: 'B2', occupied: false },
-    { id: 'B3', occupied: false },
-    { id: 'B4', occupied: true },
-    { id: 'B5', occupied: false }
-  ],
-  window: [
-    { id: 'W1', occupied: false },
-    { id: 'W2', occupied: false },
-    { id: 'W3', occupied: true },
-    { id: 'W4', occupied: false },
-    { id: 'W5', occupied: false }
-  ],
-  bar: [
-    { id: 'K1', occupied: true },
-    { id: 'K2', occupied: true },
-    { id: 'K3', occupied: false },
-    { id: 'K4', occupied: false },
-    { id: 'K5', occupied: false }
-  ],
-  patio: [
-    { id: 'P1', occupied: false },
-    { id: 'P2', occupied: true },
-    { id: 'P3', occupied: false },
-    { id: 'P4', occupied: false },
-    { id: 'P5', occupied: false }
-  ]
-};
 
 export default function App() {
   const [cart, setCart] = useState([]);
@@ -105,9 +28,32 @@ export default function App() {
   const [isAdminViewActive, setIsAdminViewActive] = useState(false);
 
   // Global Dashboard Tracker states
-  const [ordersList, setOrdersList] = useState(initialOrders);
-  const [reservationsList, setReservationsList] = useState(initialReservations);
-  const [vacancyMap, setVacancyMap] = useState(initialVacancyMap);
+  const [ordersList, setOrdersList] = useState([]);
+  const [reservationsList, setReservationsList] = useState([]);
+  const [vacancyMap, setVacancyMap] = useState({
+    booths: [],
+    window: [],
+    bar: [],
+    patio: []
+  });
+
+  // Fetch initial data from backend APIs
+  useEffect(() => {
+    fetch('/api/orders')
+      .then((res) => res.json())
+      .then((data) => setOrdersList(data))
+      .catch((err) => console.error('Error fetching orders:', err));
+
+    fetch('/api/reservations')
+      .then((res) => res.json())
+      .then((data) => setReservationsList(data))
+      .catch((err) => console.error('Error fetching reservations:', err));
+
+    fetch('/api/vacancy')
+      .then((res) => res.json())
+      .then((data) => setVacancyMap(data))
+      .catch((err) => console.error('Error fetching vacancy:', err));
+  }, []);
 
   // Apply theme to document element
   useEffect(() => {
@@ -172,68 +118,142 @@ export default function App() {
 
   // Admin Dashboard operations
   const handlePlaceOrder = (orderData) => {
-    setOrdersList(prev => [orderData, ...prev]);
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(orderData)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to place order');
+        return res.json();
+      })
+      .then((savedOrder) => {
+        setOrdersList((prev) => [savedOrder, ...prev]);
+      })
+      .catch((err) => console.error('Error placing order:', err));
   };
 
   const handleAddReservation = (resData) => {
-    setReservationsList(prev => [resData, ...prev]);
+    return fetch('/api/reservations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(resData)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to save reservation');
+        return res.json();
+      })
+      .then((savedRes) => {
+        setReservationsList((prev) => [savedRes, ...prev]);
 
-    // Also auto-occupy one vacant table in that zone if available
-    const zoneId = resData.seating;
-    setVacancyMap(prevMap => {
-      const zoneTables = [...prevMap[zoneId]];
-      const firstEmptyTableIndex = zoneTables.findIndex(t => !t.occupied);
-      if (firstEmptyTableIndex !== -1) {
-        zoneTables[firstEmptyTableIndex] = { 
-          ...zoneTables[firstEmptyTableIndex], 
-          occupied: true 
-        };
-      }
-      return {
-        ...prevMap,
-        [zoneId]: zoneTables
-      };
-    });
+        // Also auto-occupy one vacant table in that zone if available on the backend
+        const zoneId = resData.seating;
+        const zoneTables = vacancyMap[zoneId] || [];
+        const firstEmptyTable = zoneTables.find(t => !t.occupied);
+        if (firstEmptyTable) {
+          fetch('/api/vacancy', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              zone: zoneId,
+              tableId: firstEmptyTable.id,
+              occupied: true
+            })
+          })
+            .then((res) => res.json())
+            .then((updatedMap) => {
+              setVacancyMap(updatedMap);
+            })
+            .catch((err) => console.error('Error updating table state:', err));
+        }
+        return savedRes;
+      });
   };
 
   const handleUpdateOrderStatus = (orderId, newStatus) => {
-    setOrdersList(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to update order status');
+        return res.json();
+      })
+      .then((updatedOrder) => {
+        setOrdersList((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+      })
+      .catch((err) => console.error('Error updating order status:', err));
   };
 
   const handleUpdateReservationStatus = (indexToCancel) => {
     const resToCancel = reservationsList[indexToCancel];
-    setReservationsList(prev => prev.filter((_, idx) => idx !== indexToCancel));
+    if (!resToCancel) return;
 
-    // Release one table in that zone if possible
-    if (resToCancel) {
-      const zoneId = resToCancel.seating;
-      setVacancyMap(prevMap => {
-        const zoneTables = [...prevMap[zoneId]];
-        const firstOccupiedTableIndex = zoneTables.findIndex(t => t.occupied);
-        if (firstOccupiedTableIndex !== -1) {
-          zoneTables[firstOccupiedTableIndex] = {
-            ...zoneTables[firstOccupiedTableIndex],
-            occupied: false
-          };
+    const deletePromise = resToCancel._id
+      ? fetch(`/api/reservations/${resToCancel._id}`, { method: 'DELETE' })
+      : Promise.resolve();
+
+    deletePromise
+      .then((res) => {
+        if (res && !res.ok) throw new Error('Failed to cancel reservation');
+        setReservationsList((prev) => prev.filter((_, idx) => idx !== indexToCancel));
+
+        // Release one table in that zone if possible
+        const zoneId = resToCancel.seating;
+        const zoneTables = vacancyMap[zoneId] || [];
+        const firstOccupiedTable = zoneTables.find((t) => t.occupied);
+        if (firstOccupiedTable) {
+          fetch('/api/vacancy', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              zone: zoneId,
+              tableId: firstOccupiedTable.id,
+              occupied: false
+            })
+          })
+            .then((res) => res.json())
+            .then((updatedMap) => {
+              setVacancyMap(updatedMap);
+            })
+            .catch((err) => console.error('Error releasing table state:', err));
         }
-        return {
-          ...prevMap,
-          [zoneId]: zoneTables
-        };
-      });
-    }
+      })
+      .catch((err) => console.error('Error deleting reservation:', err));
   };
 
   const handleToggleVacancy = (zoneId, tableId) => {
-    setVacancyMap(prevMap => {
-      const zoneTables = prevMap[zoneId].map(t => 
-        t.id === tableId ? { ...t, occupied: !t.occupied } : t
-      );
-      return {
-        ...prevMap,
-        [zoneId]: zoneTables
-      };
-    });
+    const zoneTables = vacancyMap[zoneId] || [];
+    const table = zoneTables.find((t) => t.id === tableId);
+    if (!table) return;
+
+    fetch('/api/vacancy', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        zone: zoneId,
+        tableId: tableId,
+        occupied: !table.occupied
+      })
+    })
+      .then((res) => res.json())
+      .then((updatedMap) => {
+        setVacancyMap(updatedMap);
+      })
+      .catch((err) => console.error('Error toggling vacancy state:', err));
   };
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -278,7 +298,12 @@ export default function App() {
           <Signature />
           <Gallery />
           <Testimonials />
-          <Reservation onAddReservation={handleAddReservation} />
+          <Reservation 
+            key={currentUser ? currentUser.email : 'guest'}
+            onAddReservation={handleAddReservation} 
+            currentUser={currentUser}
+            onOpenLogin={() => setIsLoginOpen(true)}
+          />
           <Contact />
         </main>
       )}

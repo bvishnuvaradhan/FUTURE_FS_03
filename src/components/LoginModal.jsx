@@ -13,33 +13,62 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      // Validating mock credentials
-      if (email === 'admin@urbanbrew.com' && password === 'admin123') {
-        onLoginSuccess({ name: 'Café Admin', email: 'admin@urbanbrew.com', role: 'admin' });
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Invalid email or password.');
+        }
+        return res.json();
+      })
+      .then((userData) => {
+        setIsLoading(false);
+        onLoginSuccess(userData);
         handleClose();
-      } else if (email === 'user@urbanbrew.com' && password === 'user123') {
-        onLoginSuccess({ name: 'Boga Vishnu', email: 'user@urbanbrew.com', role: 'user' });
-        handleClose();
-      } else {
-        setError('Invalid email or password. Hint: Use the quick login buttons below!');
-      }
-    }, 1000);
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setError(err.message || 'Authentication error. Please try again.');
+      });
   };
 
   const handleQuickLogin = (role) => {
     setError('');
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (role === 'admin') {
-        onLoginSuccess({ name: 'Café Admin', email: 'admin@urbanbrew.com', role: 'admin' });
-      } else {
-        onLoginSuccess({ name: 'Boga Vishnu', email: 'user@urbanbrew.com', role: 'user' });
-      }
-      handleClose();
-    }, 800);
+    const credentials = 
+      role === 'admin' 
+        ? { email: 'admin@urbanbrew.com', password: 'admin123' }
+        : { email: 'user@urbanbrew.com', password: 'user123' };
+
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Quick login failed.');
+        }
+        return res.json();
+      })
+      .then((userData) => {
+        setIsLoading(false);
+        onLoginSuccess(userData);
+        handleClose();
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setError(err.message || 'Quick login connection error.');
+      });
   };
 
   const handleClose = () => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarRange, CheckCircle2, Loader2, Users, Clock, Calendar, Armchair, Sun, Coffee, Trees } from 'lucide-react';
+import { CalendarRange, CheckCircle2, Loader2, Users, Clock, Calendar, Armchair, Sun, Coffee, Trees, Lock } from 'lucide-react';
 import Button from '../components/Button';
 
 const seatingZones = [
@@ -30,10 +30,10 @@ const seatingZones = [
   }
 ];
 
-export default function Reservation({ onAddReservation }) {
+export default function Reservation({ onAddReservation, currentUser, onOpenLogin }) {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: currentUser?.name || '',
+    email: currentUser?.email || '',
     phone: '',
     date: '',
     time: '18:00',
@@ -65,13 +65,22 @@ export default function Reservation({ onAddReservation }) {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-      if (onAddReservation) {
-        onAddReservation(formData);
-      }
-    }, 1800);
+    if (onAddReservation) {
+      onAddReservation(formData)
+        .then(() => {
+          setIsLoading(false);
+          setIsSubmitted(true);
+        })
+        .catch((err) => {
+          setIsLoading(false);
+          setErrorMsg(err?.message || 'Failed to book reservation. Please try again.');
+        });
+    } else {
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsSubmitted(true);
+      }, 1000);
+    }
   };
 
   const resetForm = () => {
@@ -147,9 +156,32 @@ export default function Reservation({ onAddReservation }) {
             <div className="glass-panel p-8 md:p-12 border border-gold/15 shadow-2xl relative min-h-[460px] flex flex-col justify-center">
               
               <AnimatePresence mode="wait">
-                
-                {/* Form state */}
-                {!isSubmitted ? (
+                {!currentUser ? (
+                  <motion.div
+                    key="login-prompt"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex flex-col items-center justify-center text-center space-y-6 py-12"
+                  >
+                    <div className="w-16 h-16 bg-gold/10 border border-gold/30 rounded-full flex items-center justify-center text-gold mb-2 shadow-[0_0_15px_rgba(197,168,128,0.2)]">
+                      <Lock size={28} className="animate-pulse" />
+                    </div>
+                    <h3 className="font-serif text-2xl font-bold text-cream">
+                      Sign In Required
+                    </h3>
+                    <p className="text-cream/70 text-sm max-w-sm leading-relaxed font-sans font-light">
+                      To secure your table reservation at Urban Brew, you need to be signed in to your account.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={onOpenLogin}
+                      className="bg-gold text-charcoal border border-gold hover:bg-gold-hover hover:border-gold-hover px-8 py-3.5 uppercase tracking-widest text-xs font-semibold transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(197,168,128,0.4)] cursor-pointer rounded-none"
+                    >
+                      Sign In to Book
+                    </button>
+                  </motion.div>
+                ) : !isSubmitted ? (
                   <motion.form 
                     key="form"
                     initial={{ opacity: 0 }}

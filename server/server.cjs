@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
@@ -91,14 +92,27 @@ const Vacancy = mongoose.model('Vacancy', vacancySchema);
 // --- Seed Initial Data if Database is Empty ---
 async function seedInitialData() {
   try {
-    // 1. Seed Users
+    // 1. Seed Users (ensuring hashed passwords)
     const userCount = await User.countDocuments();
     if (userCount === 0) {
+      const userHash = bcrypt.hashSync('user123', 10);
+      const adminHash = bcrypt.hashSync('admin123', 10);
       await User.insertMany([
-        { name: 'Boga Vishnu', email: 'user@urbanbrew.com', password: 'user123', role: 'user' },
-        { name: 'Café Admin', email: 'admin@urbanbrew.com', password: 'admin123', role: 'admin' }
+        { name: 'Boga Vishnu', email: 'user@urbanbrew.com', password: userHash, role: 'user' },
+        { name: 'Café Admin', email: 'admin@urbanbrew.com', password: adminHash, role: 'admin' }
       ]);
-      console.log("Seeded default User and Admin accounts.");
+      console.log("Seeded default User and Admin accounts with hashed passwords.");
+    } else {
+      // Clean up legacy plain text passwords in Atlas if they exist
+      const legacyUsers = await User.find({ password: { $not: /^\$2[ayb]\$.{56}$/ } });
+      if (legacyUsers.length > 0) {
+        console.log("Found legacy plain-text passwords. Updating them to secure hashes...");
+        for (const u of legacyUsers) {
+          u.password = bcrypt.hashSync(u.password, 10);
+          await u.save();
+        }
+        console.log("Legacy passwords updated.");
+      }
     }
 
     // 2. Seed Vacancy Map
@@ -218,16 +232,18 @@ async function seedInitialData() {
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email, password });
+    const user = await User.findOne({ email });
     if (user) {
-      res.json({
-        name: user.name,
-        email: user.email,
-        role: user.role
-      });
-    } else {
-      res.status(401).json({ error: 'Invalid email or password.' });
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        return res.json({
+          name: user.name,
+          email: user.email,
+          role: user.role
+        });
+      }
     }
+    res.status(401).json({ error: 'Invalid email or password.' });
   } catch (err) {
     res.status(500).json({ error: 'Database authentication error.' });
   }

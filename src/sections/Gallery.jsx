@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import diningImg from '../assets/dining.png';
 import coffeeImg from '../assets/coffee.png';

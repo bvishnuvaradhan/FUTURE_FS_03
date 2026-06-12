@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, CalendarRange, Sparkles, CheckCircle2, RefreshCw, Layers, Compass, Loader2 } from 'lucide-react';
+import { ShoppingBag, CalendarRange, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export default function AdminDashboard({ 
   ordersList, 

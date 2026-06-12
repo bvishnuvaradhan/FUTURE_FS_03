@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarRange, CheckCircle2, Loader2, Users, Clock, Calendar, Armchair, Sun, Coffee, Trees } from 'lucide-react';
 import Button from '../components/Button';

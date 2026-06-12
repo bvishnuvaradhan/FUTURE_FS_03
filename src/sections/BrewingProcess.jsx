@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Flame, ShieldAlert, Cpu, Coffee } from 'lucide-react';
 import grindingImg from '../assets/grinding.png';

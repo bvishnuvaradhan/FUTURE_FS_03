@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Loader2, CheckCircle2, MapPin, Truck, ShieldCheck } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Loader2, CheckCircle2, Truck, ShieldCheck } from 'lucide-react';
 import Button from './Button';
 
 export default function CartDrawer({ 

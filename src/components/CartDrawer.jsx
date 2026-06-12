@@ -9,7 +9,8 @@ export default function CartDrawer({
   cartItems, 
   onUpdateQuantity, 
   onRemoveItem,
-  onClearCart
+  onClearCart,
+  onPlaceOrder
 }) {
   const [orderType, setOrderType] = useState('pickup'); // 'pickup' or 'delivery'
   const [address, setAddress] = useState('');
@@ -41,13 +42,25 @@ export default function CartDrawer({
     setTimeout(() => {
       setIsCheckingOut(false);
       setIsSuccess(true);
-      setOrderNum(`UB-${Math.floor(100000 + Math.random() * 900000)}`);
-      setConfirmedDetails({
+      const generatedId = `UB-${Math.floor(100000 + Math.random() * 900000)}`;
+      setOrderNum(generatedId);
+      
+      const orderData = {
+        id: generatedId,
+        items: cartItems,
         type: orderType,
         address: address,
         landmark: landmark,
-        total: total
-      });
+        total: total,
+        status: 'Pending'
+      };
+      
+      setConfirmedDetails(orderData);
+
+      if (onPlaceOrder) {
+        onPlaceOrder(orderData);
+      }
+
       // Clear inputs
       setAddress('');
       setLandmark('');

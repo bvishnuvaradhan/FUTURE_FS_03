@@ -30,7 +30,7 @@ const seatingZones = [
   }
 ];
 
-export default function Reservation() {
+export default function Reservation({ onAddReservation }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -68,6 +68,9 @@ export default function Reservation() {
     setTimeout(() => {
       setIsLoading(false);
       setIsSubmitted(true);
+      if (onAddReservation) {
+        onAddReservation(formData);
+      }
     }, 1800);
   };
 

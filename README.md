@@ -1,6 +1,6 @@
 # Urban Brew Café - Premium Restaurant Website
 
-Urban Brew Café is a modern, premium, production-quality restaurant website built using React, Vite, Tailwind CSS v4, and Framer Motion. It features a dark-luxurious design tailored to a cozy cafe atmosphere with smooth typography, custom animations, a dynamic sticky navigation bar, and interactive ordering and reservation systems.
+Urban Brew Café is a modern, premium, production-quality restaurant website built using React, Vite, Tailwind CSS v4, and Framer Motion. It features a dark-luxurious design tailored to a cozy cafe atmosphere with smooth typography, custom animations, a dynamic sticky navigation bar, and interactive ordering, reservation, authentication, and management dashboard systems.
 
 ---
 
@@ -18,6 +18,14 @@ Urban Brew Café is a modern, premium, production-quality restaurant website bui
 - **Interactive Seating Zone Selector**: Enhanced the reservation form with an interactive seating card selector allowing guests to pick **Cozy Booths**, **Window Side**, **Coffee Bar**, or **Garden Patio**, displaying the choice in the final confirmation overlay.
 - **Bean-To-Cup Brewing Timeline**: An animated step-by-step progress timeline detailing bean sourcing, roasting, grinding, extraction, and latte micro-foam pouring, complete with beautiful coffee farm and local barista step-specific illustrations (Ethical sourcing, roasting, grinding, espresso, and latte pouring).
 - **Dual Theme Switcher**: Dynamic theme switcher toggling between **Cozy Amber** (amber/charcoal tones) and **Midnight Onyx** (slate/silver tones) with smooth 0.5s transitions.
+- **User & Admin Authentication Login**: Pinned dialog selector supporting email and password authentication. Features **one-click testing shortcuts** for rapid evaluation:
+  - **User Role**: `user@urbanbrew.com` (password: `user123`)
+  - **Admin Role**: `admin@urbanbrew.com` (password: `admin123`)
+- **Live Admin Dashboard**: Restricted-access administrative control center that connects user checkouts and table bookings in real-time, featuring:
+  - **Metrics Panel**: Live counters tracking Active Orders, Today's Bookings, and Table Occupancy Rates.
+  - **Takeout & Delivery Orders**: View placed orders and advance their kitchen status: *Pending* -> *Preparing* -> *Out for Delivery* -> *Completed*.
+  - **Reservations Log**: Manage guest bookings, times, and seats. Cancelling a booking automatically releases the reserved table.
+  - **Table Vacancy Monitor**: Stylized cafe floor layout dividing the 20 tables into Booths, Patio, Bar, and Window zones, displaying occupied/empty statuses and supporting manual toggle overrides.
 - **Indian Rupee (₹) Pricing**: Standardized all menu and signature product pricing in Indian Rupees (₹).
 - **Dark-Themed Maps**: Embedded Google Maps location card styled with custom dark styling filters.
 - **WhatsApp Floating Button**: Features pulsing rings to catch customer attention and opens direct reservation pre-filled chats.
@@ -53,6 +61,7 @@ Urban-Brew-Cafe/
 │   │   ├── Button.jsx      # Styled buttons with motion states
 │   │   ├── Navbar.jsx      # Sticky responsive navigation with Scroll Spy
 │   │   ├── CartDrawer.jsx  # Slide-out checkout drawer with Pickup/Delivery selector
+│   │   ├── LoginModal.jsx  # Credentials checker with role overrides
 │   │   └── WhatsAppButton.jsx # Pulsing floating contact anchor
 │   ├── sections/        # Section-specific content blocks
 │   │   ├── Hero.jsx        # Splash page headline & initial CTA buttons
@@ -64,7 +73,8 @@ Urban-Brew-Cafe/
 │   │   ├── Gallery.jsx     # Masonry-style ambiance grid
 │   │   ├── Testimonials.jsx# Guest reviews cards
 │   │   ├── Reservation.jsx # Fully interactive table booking form with Seating Map
-│   │   └── Contact.jsx     # Opening hours, dark map, and socials
+│   │   ├── Contact.jsx     # Opening hours, dark map, and socials
+│   │   └── AdminDashboard.jsx # Live admin order, booking, and vacancy manager
 │   ├── App.jsx          # Orchestrator and wrapper layout
 │   ├── index.css        # Tailwind v4 import, fonts, custom variables & scrollbars
 │   └── main.jsx         # App entrypoint
@@ -91,7 +101,7 @@ The styling uses customized CSS theme variables defined inside `src/index.css`:
 
 Ensure you have [Node.js](https://nodejs.org/) installed (version 18+ is recommended).
 
-### 2. Installation
+### 2. Extraction & Installation
 
 Clone this repository and navigate to the project directory:
 

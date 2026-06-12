@@ -39,6 +39,9 @@ Urban Brew Café is a modern, premium, production-quality restaurant website bui
 - **Styling & Theme**: [Tailwind CSS v4](https://tailwindcss.com/) (using CSS-first configuration and `@tailwindcss/vite` compiler)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Backend Server**: [Express.js](https://expressjs.com/) (Node.js framework)
+- **Database Connection**: [Mongoose](https://mongoosejs.com/)
+- **Database**: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 
 ---
 
@@ -47,7 +50,10 @@ Urban Brew Café is a modern, premium, production-quality restaurant website bui
 ```
 Urban-Brew-Cafe/
 ├── public/
-│   └── favicon.svg      # Favicon vector logo
+│   └── favicon.svg      # Favicon logo
+├── server/              # Backend Express Server
+│   ├── .env             # Database connection credentials
+│   └── server.js        # Schemas, seeding logic & API endpoints
 ├── src/
 │   ├── assets/          # High-resolution generated food/interior assets
 │   │   ├── hero_bg.png     # Café background banner
@@ -61,7 +67,7 @@ Urban-Brew-Cafe/
 │   │   ├── Button.jsx      # Styled buttons with motion states
 │   │   ├── Navbar.jsx      # Sticky responsive navigation with Scroll Spy
 │   │   ├── CartDrawer.jsx  # Slide-out checkout drawer with Pickup/Delivery selector
-│   │   ├── LoginModal.jsx  # Credentials checker with role overrides
+│   │   ├── LoginModal.jsx  # Real database credentials checker
 │   │   └── WhatsAppButton.jsx # Pulsing floating contact anchor
 │   ├── sections/        # Section-specific content blocks
 │   │   ├── Hero.jsx        # Splash page headline & initial CTA buttons
@@ -80,7 +86,7 @@ Urban-Brew-Cafe/
 │   └── main.jsx         # App entrypoint
 ├── index.html           # SEO headers, viewport scaling, and Google Fonts
 ├── package.json         # Build commands and package dependencies
-└── vite.config.js       # Vite configuration with Tailwind CSS compiler
+└── vite.config.js       # Vite configuration with reverse proxy target
 ```
 
 ---
@@ -110,17 +116,26 @@ cd Urban-Brew-Cafe
 npm install
 ```
 
-### 3. Running Development Server
+### 3. Database & Server Setup
 
-To spin up the local development hot-reload server:
+Create a file named `.env` inside the `server/` directory and specify your MongoDB Atlas connection string (note that special characters in passwords, e.g. `@`, must be URL-encoded as `%40`):
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/urban_brew?appName=Database
+PORT=5000
+```
+
+### 4. Running Development Server
+
+To spin up the React frontend and Node/Express backend concurrently:
 
 ```bash
 npm run dev
 ```
 
-The app will be accessible at `http://localhost:5173`.
+The React client will be accessible at `http://localhost:5173` and requests prefixed with `/api` will be automatically proxied to the Express backend running at `http://localhost:5000`.
 
-### 4. Compiling Production Build
+### 5. Compiling Production Build
 
 To compile a minified, production-ready build:
 
@@ -130,7 +145,7 @@ npm run build
 
 Vite will bundle all React assets, compress images, compile Tailwind CSS v4 styles, and dump everything inside the `dist/` directory.
 
-### 5. Previewing Production Build
+### 6. Previewing Production Build
 
 To locally spin up a web server showcasing the compiled bundle:
 

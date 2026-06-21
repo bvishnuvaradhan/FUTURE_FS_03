@@ -352,7 +352,11 @@ app.put('/api/vacancy', async (req, res) => {
   }
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server is running in production mode on port ${PORT}`);
-});
+// Start Server if run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running in production mode on port ${PORT}`);
+  });
+}
+
+module.exports = app;
